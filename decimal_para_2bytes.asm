@@ -1,7 +1,7 @@
 ;---------------------------------------------------
-; Programa:
-; Autor:
-; Data:
+; Programa: Armazena decimal em variável de 16 bits
+; Autor: Alexandre Camillo, Arthur Sasse, Lucas Farias
+; Data: 22/04/2021
 ;---------------------------------------------------
 ORG 100h
 nums: DS 5
