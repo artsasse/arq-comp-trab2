@@ -1,12 +1,9 @@
 ;---------------------------------------------------
-; Programa: Multiplica algarismo por 10
+; Programa: Multiplica algarismo por 10.000
 ; Autor: Alexandre Camillo, Arthur Sasse, Lucas Farias
 ; Data: 24/04/2021
 ;---------------------------------------------------
 
-; neste programa vamos assumir que o multiplicando é 10
-; a subrotina recebe apenas o multiplicador (algarismo de 0 a 9)
-; resultados variam de 0 a 90. Podem ser contidos em 1 byte.
 ORG 800h
 
 ;main - vars
@@ -16,7 +13,7 @@ ptr_valor: DW valor
 ;multiplica - vars
 multresult: DS 2    ; variavel local para os resultados parciais
 result_ender: DS 2  ; variavel com o endereço que vai receber o resultado final
-;multiplicando: DS 2
+multiplicando: DS 2
 multiplicador: DS 2
 retorno: DS 2
 old_sp: DS 2
@@ -24,9 +21,8 @@ old_sp: DS 2
 ORG 0
 
 main:
-
         ; guarda valor 0x9 no multiplicador (1 byte)
-        LDA #9
+        LDA #3
         PUSH
 
         ; carrega o endereço do resultado da multiplicacao
@@ -68,10 +64,13 @@ multiplica:     ; (multiplicador:1B, result_ender:2B)
 loop_multiplica:  ; parte que vai se repetir
 
         LDA multresult      ; Pega o byte menos significativo
-        ADD #10             ; Soma com o multiplicando (10)
+        ADD #010h           ; Soma com parte baixa de 10000 (multiplicando)
         STA multresult      ; Guarda o resultado
 
-        LDA #0              ; carrega zero no acumulador
+        LDA #027h           ; carrega parte alta de 10000 (multiplicando)
+        ADC multresult+1    ; soma com parte alta do resultado parcial
+                            ; e soma o carry (1 caso a soma anterior dê overflow)
+        STA multresult+1    ; Guarda o resultado
 
         LDA multiplicador   ; multiplicador funciona como um contador
         SUB #1              ; de somas sucessivas
