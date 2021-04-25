@@ -3,9 +3,12 @@
 ; Autor: Alexandre Camillo, Arthur Sasse, Lucas Farias
 ; Data: 24/04/2021
 ;---------------------------------------------------
+
 ORG 100h
+
 ;main - vars
 valor: DS 2
+
 ;multiplica - vars
 multresult: DS 2    ; variavel local para os resultados parciais
 result_ender: DS 2  ; variavel com o endereço que vai receber o resultado final
@@ -36,11 +39,10 @@ main:
         ; chama rotina de multiplicacao
         JSR multiplica
 
-        LDS #31h
-
+        ; para o programa
         HLT
 
-multiplica:  ; (multiplicando:1B, multiplicador:2B, multresult:2B)
+multiplica:  ; (multiplicando:1B, multiplicador:2B, result_ender:2B)
 
         ; salva o endereço de retorno para quem chamou a rotina
         POP
@@ -81,14 +83,13 @@ loop_multiplica:    ; parte que vai se repetir
         ADC multresult+1   ; Pega o byte mais significativo
         STA multresult+1   ; e soma o carry (1, se a soma anterior deu overflow)
 
-        LDA multiplicador  ;
-        SUB #1             ;
+        LDA multiplicador  ; multiplicador funciona como um contador
+        SUB #1             ; de somas sucessivas
         STA multiplicador  ;
 
         LDA multiplicador+1   ; Pega o byte mais significativo do multiplicador
         SBC #0                ; e subtrai o carry (1 se a subtracao anterior deu overflow)
         STA multiplicador+1   ;
-
 
         OR multiplicador
         OR #0
