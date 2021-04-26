@@ -6,7 +6,7 @@
 
 ORG 100h
 nums: DS 5
-nums_qtd: DB 0
+;nums_qtd: DB 0
 count: DB 5
 
 ; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
@@ -29,9 +29,9 @@ LDS #200h
 main:
      JSR leitura    ; Chama a rotina de leitura
 
-     LDA #5         ;
-     SUB count      ; Pega a qtd de nums inseridos
-     STA nums_qtd   ; e guarda em nums_qtd
+     ;LDA #5         ;
+     ;SUB count      ; Pega a qtd de nums inseridos
+     ;STA nums_qtd   ; e guarda em nums_qtd
 
      JSR trata_nums
 
