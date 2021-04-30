@@ -7,8 +7,8 @@
 ORG 200
 
 ; Números a serem comparados
-X: DW 270
-Y: DW 50
+X: DW 546
+Y: DW 49000
 
 ; Variáveis da rotina
 VAR1: DW 0
@@ -70,22 +70,13 @@ TESTES:
        ; Testa se a parte alta de VAR1 é positiva
        LDA VAR1+1
        AND #128
-       JNZ NEGATIVO ; Se der 0 VAR1 é positivo
+       JNZ NEGATIVO ; Se der 0, VAR1 é positivo
 
-       ; Se a parte alta for 0, utilizamos a parte baixa
-       LDA VAR1
-       AND #128
-       JNZ NEGATIVO
-
-       ; A partir daqui A é positivo
+       ; A partir daqui VAR1 é positivo
 
        LDA VAR2+1
        AND #128  ; Se não der 0, VAR2 é negativo,
        JNZ MAIOR ; ou seja, VAR1 é maior
-
-       LDA VAR2
-       AND #128
-       JNZ MAIOR
 
        ; A partir daqui VAR1 e VAR2 são positivos
 
@@ -111,21 +102,17 @@ NEGATIVO:
          AND #128  ; Se der 0, VAR2 é positivo,
          JZ  MENOR ; então VAR1 é menor
 
-         LDA VAR2
-         AND #128
-         JZ  MENOR
-
-         ; A partir daqui A e B são negativos
+         ; A partir daqui VAR1 e VAR2 são negativos
 
          LDA VAR1+1
          SUB VAR2+1
-         JN  MAIOR
-         JP  MENOR
+         JN  MENOR
+         JP  MAIOR
 
          LDA VAR1
          SUB VAR2
-         JN  MAIOR
-         JP  MENOR
+         JN  MENOR
+         JP  MAIOR
 IGUAIS:
        LDA #0
        ADD #30h ; Transforma em ASCII
@@ -138,6 +125,7 @@ MAIOR:
       LDA #1
       ADD #30h
       OUT 2
+      
       ; Restaura o SP
       LDS SP
       RET
