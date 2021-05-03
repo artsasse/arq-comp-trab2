@@ -6,7 +6,6 @@
 
 ORG 100h
 nums: DS 5
-;nums_qtd: DB 0
 count: DB 5
 
 ; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
@@ -16,6 +15,7 @@ decimal: DB 0, 0
 
 PTRnums: DW nums
 PTRpot: DW potencia
+PTRdecimal: DW decimal
 
 multresult: DS 2
 multiplicando: DS 2
@@ -29,15 +29,11 @@ LDS #200h
 main:
      JSR leitura    ; Chama a rotina de leitura
 
-     ;LDA #5         ;
-     ;SUB count      ; Pega a qtd de nums inseridos
-     ;STA nums_qtd   ; e guarda em nums_qtd
-
      JSR trata_nums
 
-     LDA decimal
+     LDA PTRdecimal
      PUSH
-     LDA decimal+1
+     LDA PTRdecimal+1
      PUSH
 
      HLT
@@ -47,20 +43,6 @@ trata_nums:
            LDA #nums          ; Calcula endereço
            ADD count          ; do num a ser tratado
            STA PTRnums        ;
-
-           ;LDA count          ; Calcula o endereço
-           ;ADD nums_qtd       ; da
-           ;SUB #5             ; potência de 10 do número
-           ;STA multiplicando  ; que está sendo tratado
-           ;LDA #2             ;
-           ;STA multiplicador  ;
-           ;LDA #0             ;
-           ;STA multresult     ;
-           ;JSR multiplica     ;
-           ;LDA #potencia      ;
-           ;ADD multresult     ;
-           ;STA PTRpot         ;
-
 
            LDA @PTRpot        ; Configura o multiplicando
            STA multiplicando  ; da rotina 'multiplica' com
@@ -92,7 +74,6 @@ trata_nums:
            LDA decimal+1      ; Soma o byte mais significativo com o carry
            ADC multresult+1   ;
            STA decimal+1
-
 
            LDA count
            ADD #1
