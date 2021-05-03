@@ -14,9 +14,9 @@
 
 ORG 200
 
-; Números a serem comparados
-X: DW 65535
-Y: DW 32896
+; Números a serem comparados (Intervalo de -32768 a 32767)
+X: DW -32513
+Y: DW -32641
 
 ; Ponteiro para armazenar o endereço dos números
 PTR: DW X
@@ -156,8 +156,8 @@ NEGATIVO:
 
          LDA VAR1
          SUB VAR2
-         JN  MENOR
-         JP  MAIOR
+         JC  MENOR
+         JNZ MAIOR
 IGUAIS:
        ; Coloca resultado no acumulador
        LDA #0
