@@ -8,15 +8,15 @@
 ; Então se as duas forem positivas, faz uma subtração para saber
 ; e vê se a primeira é maior, menor ou igual. O mesmo ocorre se forem
 ; ambas negativas. Se tiverem sinais opostos, já retorna o resultado.
-; É retornado o no acumulador se as duas variáveis forem iguai, se a
-; primeira for maior, retorna 1 e se for menor retorna -1. O valor
-; retornado é apresentado no banner.
+; É retornado 0 no acumulador se as duas variáveis forem
+; iguais, se a primeira for maior, retorna 1 e se for menor retorna -1.
+; O valor retornado é apresentado no banner.
 
 ORG 200
 
 ; Números a serem comparados
-X: DW 49000
-Y: DW 546
+X: DW 65535
+Y: DW 32896
 
 ; Ponteiro para armazenar o endereço dos números
 PTR: DW X
@@ -134,12 +134,12 @@ TESTES:
 
        LDA VAR1
        SUB VAR2
-       JN  MENOR ; Mesma lógica do código anterior
-       JP  MAIOR
+       JZ  IGUAIS; Se a subtração deu zero, as duas são iguais
+       JC  MENOR ; Se deu carry, VAR1 é menor
 
-       ; Se passou nos testes acima, os dois são iguais
+       ; Se passou nos testes acima, VAR1 é maior
 
-       JMP IGUAIS
+       JMP MAIOR
 
 ; Caso onde VAR1 é negativo
 NEGATIVO:
