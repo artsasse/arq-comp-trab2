@@ -106,9 +106,10 @@ LACO:
      ; Subtrai a parte baixa do maior até aqui
      LDA @PTR
      SUB MAX
-     JP  PB_TROCA_MAX
+     JZ  PB_CONTINUA
+     JC  PB_CONTINUA
 
-     JMP PB_CONTINUA
+     JMP PB_TROCA_MAX
 
 NEGATIVO:
          ; Verifica se o maior valor é negativo
