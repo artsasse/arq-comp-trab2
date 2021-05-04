@@ -1,17 +1,28 @@
-;---------------------------------------------------
-; Programa: Acha o maior valor de um vetor de 16 bits com sinal
-; Autor: Alexandre Camillo, Arthur Sasse, Lucas Farias
-; Data: 30/04/21
-;---------------------------------------------------
-ORG 200h
+;----------------------------------------------------------------------------------------
+; Programa: Encontra o maior e menor valor de um vetor com variáveis de 16 bits com sinal
+; Autor: Alexandre Camillo, Arthur Sasse e Lucas Farias
+; Data: 04/05/2021
+;----------------------------------------------------------------------------------------
+
+; Foi reaproveitado o código da questão anterior para comparar duas variáveis de 16 bits.
+; O programa percorre o vetor enquanto o número de iterações não alcançou o tamanho dele
+; e pra cada elemento do vetor ele chama a subrotina COMPARA e verifica se esse elemento é
+; maior, menor ou igual ao maior valor até o momento. Se for maior, o elemento é o novo maior
+; e se não for, faz o mesmo procedimento para o menor valor. Ao final, retorna os valores
+; encontrados na pilha e armazena nas variáveis correspondentes.
+
+ORG 200H
 
 ; Variáveis do programa principal
 
 ; Vetor e endereço inicial
-VETOR: DW 57405, 8742, 62760, 42615, 39769, 46349, 61530, 35871, 48525, 14587, 37618, 50144, 44313, 61281, 3091, 5098, 55314, 60975, 4270, 1260
+VETOR: DW -8131, 8742, -2776, -22921, -25767, -19187, -4006, -29665, -17011, 14587, -27918, -15392, -21223, -4255, 3091, 5098, -10222, -4561, 4270, 1260
 VET_INI: DW VETOR
 
-; Variáveis da rotina
+MAIOR_VALOR: DW 0
+MENOR_VALOR: DW 0
+
+; Variáveis da rotina para encontrar o maior e menor valor do vetor
 
 ; Ponteiro para armazenar o valor atual do vetor
 PTR: DW 0
@@ -23,8 +34,20 @@ MAX: DW 0
 MIN: DW 0
 ; Variável para armazenar a quantidade de iterações
 I: DB 1
-; Valor do SP para retorno
-SP: DW 0
+; Variáveis para armazenar o SP
+ROTINA_RET1: DS 1
+ROTINA_RET2: DS 1
+
+; Variáveis da rotina para comparar duas váriáveis
+
+VAR1: DW 0
+VAR2: DW 0
+
+; Ponteiro auxiliar
+PTR_AUX: DW 0
+
+RET_COMPARA1: DS 1
+RET_COMPARA2: DS 1
 
 ORG 0
 
@@ -39,18 +62,29 @@ MAIN:
      LDA #20
      JSR INICIO
 
+     ; Pega o menor valor retornado na pilha e salva
+     POP
+     STA MENOR_VALOR+1
+     POP
+     STA MENOR_VALOR
+
+     ; Pega o maior valor retornado na pilha e salva
+     POP
+     STA MAIOR_VALOR+1
+     POP
+     STA MAIOR_VALOR
+
      HLT
 
 INICIO:
        ; Salva o tamanho do vetor
        STA TAM
 
-       ; Salva o valor do SP
-       STS SP
-
-       ; Tira as duas primeiras posições da pilha
+       ; Salva o valor de retorno da rotina
        POP
+       STA ROTINA_RET2
        POP
+       STA ROTINA_RET1
 
        ; Salva o endereço inicial no ponteiro
        POP
@@ -58,9 +92,10 @@ INICIO:
        POP
        STA PTR
 
-       ; Adiciona o primeiro valor do vetor como máximo
+       ; Adiciona o primeiro valor do vetor como máximo e mínimo
        LDA @PTR
        STA MAX
+       STA MIN
 
        LDA PTR
        ADD #1
@@ -68,199 +103,195 @@ INICIO:
 
        LDA @PTR
        STA MAX+1
-
-       ; Avança com o ponteiro pro segundo elemento do vetor
-       LDA PTR
-       ADD #1
-       STA PTR
+       STA MIN+1
 
 LACO:
-     ; Coloca o ponteiro na parte alta do elemento
+     ; Avança com o ponteiro pro próximo elemento do vetor
      LDA PTR
      ADD #1
      STA PTR
 
-     ; Verifica se é negativo
-     LDA @PTR
-     AND #128
-     JNZ NEGATIVO
-
-     ; Verifica se o maior é negativo
-     ; Para o caso do primeiro valor do vetor ser negativo
-     LDA MAX+1
-     AND #128
-     JNZ PA_TROCA_MAX
-
-     ; Se o valor atual e o maior são positivos,
-     ; subtrai a parte alta do maior até aqui
-     LDA @PTR
-     SUB MAX+1
-     JN  PA_CONTINUA
-     JP  PA_TROCA_MAX
-
-     ; Move ponteiro para a parte baixa
+     ; Coloca o endereço desse elemento na pilha
      LDA PTR
-     SUB #1
+     PUSH
+     LDA PTR+1
+     PUSH
+
+     ; Coloca o maior até aqui na pilha
+     LDA MAX
+     PUSH
+     LDA MAX+1
+     PUSH
+
+     ; Pula para a rotina de comparação
+     JSR COMPARA
+
+     ; Se retornou 1 no acumulador, o valor atual é o novo maior
+     JP TROCA_MAX
+
+     ; Se retornou 0 ou -1, continua com a comparação para o mínimo
+     LDA PTR
+     PUSH
+     LDA PTR+1
+     PUSH
+
+     LDA MIN
+     PUSH
+     LDA MIN+1
+     PUSH
+
+     JSR COMPARA
+
+     ; Se retornou -1, o valor atual é o novo menor
+     JN  TROCA_MIN
+
+     ; Se retornou 0 ou 1, apenas anda com o ponteiro
+     LDA PTR
+     ADD #1
      STA PTR
 
-     ; Subtrai a parte baixa do maior até aqui
-     LDA @PTR
-     SUB MAX
-     JZ  PB_CONTINUA
-     JC  PB_CONTINUA
+     JMP CONTINUA
 
-     JMP PB_TROCA_MAX
+TROCA_MAX:
+          ; Troca o maior pelo elemento atual
+          LDA @PTR
+          STA MAX
 
-NEGATIVO:
-         ; Verifica se o maior valor é negativo
+          LDA PTR
+          ADD #1
+          STA PTR
+
+          LDA @PTR
+          STA MAX+1
+
+          JMP CONTINUA
+
+TROCA_MIN:
+          ; Troca o menor pelo elemento atual
+          LDA @PTR
+          STA MIN
+
+          LDA PTR
+          ADD #1
+          STA PTR
+
+          LDA @PTR
+          STA MIN+1
+
+          JMP CONTINUA
+
+CONTINUA:
+         ; Incrementa o número de iterações
+         LDA I
+         ADD #1
+         STA I
+
+         ; Verifica se acabou
+         SUB TAM
+         JNZ LACO
+
+         ; Se acabou, coloca os resultados na pilha
+         LDA MAX
+         PUSH
          LDA MAX+1
-         AND #128
-         JZ  PA_CONTINUA
+         PUSH
 
-         ; Agora é o caso onde os dois são negativos
+         LDA MIN
+         PUSH
+         LDA MIN+1
+         PUSH
 
-         ; Subtrai a parte alta do maior valor
-         LDA @PTR
-         SUB MAX+1
-         JN  PA_CONTINUA
-         JP  PA_TROCA_MAX
+         ; Coloca os endereços de retorno para serem utilizados no final
+         LDA ROTINA_RET1
+         PUSH
+         LDA ROTINA_RET2
+         PUSH
 
-         ; Move para a parte baixa
-         LDA PTR
-         SUB #1
-         STA PTR
+         RET
 
-         ; Subtrai a parte baixa do maior valor
-         LDA @PTR
-         SUB MAX
-         JN  PB_CONTINUA
-         JP  PB_TROCA_MAX
+COMPARA:
+        ; Salva o valor de retorno da rotina
+        POP
+        STA RET_COMPARA2
+        POP
+        STA RET_COMPARA1
 
-PA_TROCA_MAX:
-             ; Salva a parte alta no maior valor
-             LDA @PTR
-             STA MAX+1
+        ; Salva o maior em VAR2
+        POP
+        STA VAR2+1
+        POP
+        STA VAR2
 
-             ; Move para a parte baixa
-             LDA PTR
-             SUB #1
-             STA PTR
+        ; Utiliza o ponteiro auxiliar para salvar o elemento
+        ; atual em VAR1
+        POP
+        STA PTR_AUX+1
+        POP
+        STA PTR_AUX
 
-             ; Salva a parte baixa no maior valot
-             LDA @PTR
-             STA MAX
+        LDA @PTR_AUX
+        STA VAR1
 
-             ; Posiciona o ponteiro no próximo elemento
-             LDA PTR
-             ADD #2
-             STA PTR
+        LDA PTR_AUX
+        ADD #1
+        STA PTR_AUX
 
-             ; Incrementa o número de iterações
-             LDA I
-             ADD #1
-             STA I
+        LDA @PTR_AUX
+        STA VAR1+1
 
-             ; Verifica se acabou
-             SUB TAM
-             JNZ LACO
+        ; Coloca os endereços de retorno para serem utilizados no final
+        LDA RET_COMPARA1
+        PUSH
+        LDA RET_COMPARA2
+        PUSH
 
-             ; Restaura o SP
-             LDS SP
-             RET
+TESTES:
+       ; Testa se a parte alta de VAR1 é positiva
+       LDA VAR1+1
+       AND #128
+       JNZ NEGATIVO ; Se der 0, VAR1 é positivo
 
-PB_TROCA_MAX:
-             ; Salva a parte baixa no maior valot
-             LDA @PTR
-             STA MAX
+       ; A partir daqui A é positivo
 
-             ; Move para a parte alta
-             LDA PTR
-             ADD #1
-             STA PTR
+       LDA VAR2+1
+       AND #128  ; Se não der 0, VAR2 é negativo,
+       JNZ MAIOR ; ou seja, VAR1 é maior
 
-             ; Salva a parte alta no maior valor
-             LDA @PTR
-             STA MAX+1
+SUBTRACAO:
+          LDA VAR1+1
+          SUB VAR2+1; Subtrai VAR2 de VAR1 para observar o resultado
+          JN  MENOR ; Se a subtração der negativo, VAR1 é menor
+          JP  MAIOR ; Se der positivo, VAR1 é maior
 
-             ; Posiciona o ponteiro no próximo elemento
-             LDA PTR
-             ADD #1
-             STA PTR
+          ; Se der 0 temos que testar a parte baixa
 
-             ; Incrementa o número de iterações
-             LDA I
-             ADD #1
-             STA I
+          LDA VAR1
+          SUB VAR2
+          JZ  IGUAIS; Se a subtração deu zero, as duas são iguais
+          JC  MENOR ; Se deu carry, VAR1 é menor
 
-             ; Verifica se acabou
-             SUB TAM
-             JNZ LACO
+          ; Se passou nos testes acima, VAR1 é maior
 
-             ; Restaura o SP
-             LDS SP
-             RET
+          JMP MAIOR
 
-PA_CONTINUA:
-            ; Posiciona o ponteiro no próximo valor
-            LDA PTR
-            ADD #1
-            STA PTR
+; Caso onde VAR1 é negativo
+NEGATIVO:
+         LDA VAR2+1
+         AND #128  ; Se der 0, VAR2 é positivo,
+         JZ  MENOR ; então VAR1 é menor
 
-            ; Incrementa o número de iterações
-            LDA I
-            ADD #1
-            STA I
-
-            ; Verifica se acabou
-            SUB TAM
-            JNZ LACO
-
-            ; Restaura o SP
-            LDS SP
-            RET
-
-
-PB_CONTINUA:
-            ; Posiciona o ponteiro no próximo valor
-            LDA PTR
-            ADD #2
-            STA PTR
-
-            ; Incrementa o número de iterações
-            LDA I
-            ADD #1
-            STA I
-
-            ; Verifica se acabou
-            SUB TAM
-            JNZ LACO
-
-            ; Restaura o SP
-            LDS SP
-            RET
+         ; Volta para a parte de subtração
+         JMP SUBTRACAO
+IGUAIS:
+       ; Coloca resultado no acumulador
+       LDA #0
+       RET
+MAIOR:
+      ; Coloca resultado no acumulador
+      LDA #1
+      RET
+MENOR:
+      ; Coloca resultado no acumulador
+      LDA #-1
+      RET
 END 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
