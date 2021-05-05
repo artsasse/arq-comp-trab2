@@ -17,26 +17,54 @@ PTRnums: DW nums
 PTRpot: DW potencia
 PTRdecimal: DW decimal
 
+PTRresultado: DS 2
+PTRresultado2: DS 2
+
 multresult: DS 2
 multiplicando: DS 2
 multiplicador: DS 2
 multcounter: DS 2
+
+endereco_retorno: DS 2
 
 ORG 0
 
 LDS #200h
 
 main:
-     JSR leitura    ; Chama a rotina de leitura
+     LDA PTRdecimal+1                ; Coloca o endereço da variável
+     PUSH                            ; na pilha
+     LDA PTRdecimal                  ;
+     PUSH                            ;
 
-     JSR trata_nums
-
-     LDA PTRdecimal
-     PUSH
-     LDA PTRdecimal+1
-     PUSH
+     JSR ler_decimal_salva_em_2bytes ; chama a rotina principal
 
      HLT
+
+ler_decimal_salva_em_2bytes:
+                            pop                     ; Salva o endereço de retorno
+                            STA endereco_retorno    ;
+                            pop                     ;
+                            STA endereco_retorno+1  ;
+
+                            pop                     ; Pega o endereço da variavel
+                            STA PTRresultado        ; passada na pilha
+                            ADD #1                  ;
+                            STA PTRresultado2       ;
+                            pop                     ;
+                            STA PTRresultado+1      ;
+                            STA PTRresultado2+1     ;
+
+
+                            JSR leitura             ; Chama a rotina de leitura dos numeros da console
+                            JSR trata_nums          ; Trata os numeros recebidos
+
+                            LDA endereco_retorno+1  ; recupera o endereço de retorno
+                            PUSH                    ;
+                            LDA endereco_retorno    ;
+                            PUSH                    ;
+
+                            RET
 
 
 trata_nums:
@@ -67,13 +95,13 @@ trata_nums:
 
            JSR multiplica
 
-           LDA decimal        ; Soma o byte menos
+           LDA @PTRresultado  ; Soma o byte menos
            ADD multresult     ; significatido do decimal
-           STA decimal        ; com o menos significativo do multresult
+           STA @PTRresultado  ; com o menos significativo do multresult
 
-           LDA decimal+1      ; Soma o byte mais significativo com o carry
-           ADC multresult+1   ;
-           STA decimal+1
+           LDA @PTRresultado2 ; Soma o byte mais significativo com o carry
+           ADC multresult+1
+           STA @PTRresultado2
 
            LDA count
            ADD #1
