@@ -89,14 +89,19 @@ printar:
     ; faz as somas, se for necessario
 soma_unidades:
     LDA unidades
-    SUB #4
+    SUB #4              ; verifica se unidades > 4. Se for, soma 3.
     JP soma_3_unidades
     JMP soma_dezenas
 soma_3_unidades:
-    ADD #7
+    ADD #7              ; restaura o valor e soma 3
     STA unidades
+    SUB #15
+    JP  carry_unidades  ; se for > 15, teve carry nos 4 bits mais baixos
     LDA #0
-    ADC #0
+    STA carry_soma      ; zera a variavel, se nao teve carry
+    JMP soma_dezenas
+carry_unidades:
+    LDA #1
     STA carry_soma
 
 soma_dezenas:
@@ -110,8 +115,13 @@ soma_dezenas:
 soma_3_dezenas:
     ADD #7
     STA dezenas
+    SUB #15
+    JP  carry_dezenas  ; se for > 15, teve carry nos 4 bits mais baixos
     LDA #0
-    ADC #0
+    STA carry_soma      ; zera a variavel, se nao teve carry
+    JMP soma_centenas
+carry_dezenas:
+    LDA #1
     STA carry_soma
 
 soma_centenas:
@@ -125,8 +135,13 @@ soma_centenas:
 soma_3_centenas:
     ADD #7
     STA centenas
+    SUB #15
+    JP  carry_centenas  ; se for > 15, teve carry nos 4 bits mais baixos
     LDA #0
-    ADC #0
+    STA carry_soma      ; zera a variavel, se nao teve carry
+    JMP soma_milhares
+carry_centenas:
+    LDA #1
     STA carry_soma
 
 soma_milhares:
@@ -140,8 +155,13 @@ soma_milhares:
 soma_3_milhares:
     ADD #7
     STA milhares
+    SUB #15
+    JP  carry_milhares  ; se for > 15, teve carry nos 4 bits mais baixos
     LDA #0
-    ADC #0
+    STA carry_soma      ; zera a variavel, se nao teve carry
+    JMP soma_dez_milhares
+carry_milhares:
+    LDA #1
     STA carry_soma
 
 soma_dez_milhares:
