@@ -4,32 +4,56 @@
 ; Date:   06/05/2021
 ;---------------------------------------------------
 
+; Ideia Geral: Conversao aproximada
+
+; A formula comum é esta:
+; TF = TC * 1,8 + 32
+
+; No nosso programa vamos usar uma conversao aproximada
+; TF = (TC * 7)/4 + 32
+; Obs: 7/4 = 1,75, mas nosso programa faz apenas divisoes inteiras
+
+; Exemplos:
+;
+; * 0° Celsius
+;   Formula: 32°F
+;   Programa: 32°F
+
+; * 19° Celsius
+;   Formula: 66,2°F
+;   Programa: 65°F
+
+; * 30° Celsius
+;   Formula: 86°F
+;   Programa: 84°F
 
 ORG 800h
+
+; salvar variavel
 nums: DS 3
 count: DB 3
-
-; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
-
 potencia: DB 1, 10, 100
 decimal: DW 0
-
 PTRnums: DW nums
 PTRpot: DW potencia
 PTRdecimal: DW decimal
-
 PTRresultado: DS 2
 
+; multiplicacao
 multresult: DS 1
 multiplicando: DS 1
 multiplicador: DS 1
 
-endereco_retorno: DS 2
+; conversao
 shiftcounter: DB 0
 
+; escrita no console
 unidades: DB 0
 dezenas: DB 0
 centenas: DB 0
+
+; geral
+endereco_retorno: DS 2
 
 ORG 0
 
@@ -40,25 +64,23 @@ main:
     PUSH                            ; na pilha
     LDA PTRdecimal                  ;
     PUSH                            ;
-
-    JSR ler_decimal_salva_em_1byte ; chama a rotina principal
-
-    LDA PTRdecimal+1                ; Coloca o endereço da variável
-    PUSH                            ; na pilha
-    LDA PTRdecimal                  ;
-    PUSH                            ;
-
-    JSR converter
+    JSR ler_decimal_salva_em_1byte  ; chama subrotina
 
     LDA PTRdecimal+1                ; Coloca o endereço da variável
     PUSH                            ; na pilha
     LDA PTRdecimal                  ;
     PUSH                            ;
+    JSR converter                   ; chama subrotina
 
-    JSR printar
+    LDA PTRdecimal+1                ; Coloca o endereço da variável
+    PUSH                            ; na pilha
+    LDA PTRdecimal                  ;
+    PUSH                            ;
+    JSR printar                     ; chama subrotina
 
     HLT
 
+; PRINTAR -------------------------------------------------
 printar:
     ; salva endereço de retorno
     POP
@@ -143,6 +165,7 @@ escrita:
 
     RET
 
+; CONVERTER -------------------------------------------------
 converter:
     ; salva endereço de retorno
     POP
@@ -198,6 +221,7 @@ soma32:
     PUSH
     RET
 
+; LER_DECIMAL_SALVA_EM_1BYTE -------------------------------------------------
 ler_decimal_salva_em_1byte:
     pop                     ; Salva o endereço de retorno
     STA endereco_retorno    ;
