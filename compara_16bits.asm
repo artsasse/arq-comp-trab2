@@ -117,7 +117,7 @@ TESTES:
        AND #128
        JNZ NEGATIVO ; Se der 0, VAR1 é positivo
 
-       ; A partir daqui A é positivo
+       ; A partir daqui VAR1 é positivo
 
        LDA VAR2+1
        AND #128  ; Se não der 0, VAR2 é negativo,
