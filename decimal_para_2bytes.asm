@@ -6,61 +6,71 @@
 
 ORG 100h
 nums: DS 5
-;nums_qtd: DB 0
 count: DB 5
 
 ; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
 potencia: DB 1, 0, 10, 0, 100, 0, 232, 3, 16, 39
 
-decimal: DB 0, 0
+decimal: Dw 0 ; max: 65535
 
 PTRnums: DW nums
 PTRpot: DW potencia
+PTRdecimal: DW decimal
+
+PTRresultado: DS 2
+PTRresultado2: DS 2
 
 multresult: DS 2
 multiplicando: DS 2
 multiplicador: DS 2
 multcounter: DS 2
 
+endereco_retorno: DS 2
+
 ORG 0
 
 LDS #200h
 
 main:
-     JSR leitura    ; Chama a rotina de leitura
+     LDA PTRdecimal+1                ; Coloca o endereço da variável
+     PUSH                            ; na pilha
+     LDA PTRdecimal                  ;
+     PUSH                            ;
 
-     ;LDA #5         ;
-     ;SUB count      ; Pega a qtd de nums inseridos
-     ;STA nums_qtd   ; e guarda em nums_qtd
-
-     JSR trata_nums
-
-     LDA decimal
-     PUSH
-     LDA decimal+1
-     PUSH
+     JSR ler_decimal_salva_em_2bytes ; chama a rotina principal
 
      HLT
+
+ler_decimal_salva_em_2bytes:
+                            pop                     ; Salva o endereço de retorno
+                            STA endereco_retorno    ;
+                            pop                     ;
+                            STA endereco_retorno+1  ;
+
+                            pop                     ; Pega o endereço da variavel
+                            STA PTRresultado        ; passada na pilha
+                            ADD #1                  ;
+                            STA PTRresultado2       ;
+                            pop                     ;
+                            STA PTRresultado+1      ;
+                            STA PTRresultado2+1     ;
+
+
+                            JSR leitura             ; Chama a rotina de leitura dos numeros da console
+                            JSR trata_nums          ; Trata os numeros recebidos
+
+                            LDA endereco_retorno+1  ; recupera o endereço de retorno
+                            PUSH                    ;
+                            LDA endereco_retorno    ;
+                            PUSH                    ;
+
+                            RET
 
 
 trata_nums:
            LDA #nums          ; Calcula endereço
            ADD count          ; do num a ser tratado
            STA PTRnums        ;
-
-           ;LDA count          ; Calcula o endereço
-           ;ADD nums_qtd       ; da
-           ;SUB #5             ; potência de 10 do número
-           ;STA multiplicando  ; que está sendo tratado
-           ;LDA #2             ;
-           ;STA multiplicador  ;
-           ;LDA #0             ;
-           ;STA multresult     ;
-           ;JSR multiplica     ;
-           ;LDA #potencia      ;
-           ;ADD multresult     ;
-           ;STA PTRpot         ;
-
 
            LDA @PTRpot        ; Configura o multiplicando
            STA multiplicando  ; da rotina 'multiplica' com
@@ -85,14 +95,13 @@ trata_nums:
 
            JSR multiplica
 
-           LDA decimal        ; Soma o byte menos
+           LDA @PTRresultado  ; Soma o byte menos
            ADD multresult     ; significatido do decimal
-           STA decimal        ; com o menos significativo do multresult
+           STA @PTRresultado  ; com o menos significativo do multresult
 
-           LDA decimal+1      ; Soma o byte mais significativo com o carry
-           ADC multresult+1   ;
-           STA decimal+1
-
+           LDA @PTRresultado2 ; Soma o byte mais significativo com o carry
+           ADC multresult+1
+           STA @PTRresultado2
 
            LDA count
            ADD #1
