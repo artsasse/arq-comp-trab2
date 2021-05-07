@@ -198,7 +198,7 @@ multiplica_por_7:
     LDA multresult
     STA @PTRresultado
 
-dividir:  ; divide por 4 (2 shifts aritméticos para direita)
+dividir:  ; divide por 4 (2 shifts para direita)
     LDA @PTRresultado
     SHR
     STA @PTRresultado
