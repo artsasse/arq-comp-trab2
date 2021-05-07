@@ -11,7 +11,7 @@ count: DB 5
 ; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
 potencia: DB 1, 0, 10, 0, 100, 0, 232, 3, 16, 39
 
-decimal: DB 0, 0
+decimal: Dw 0 ; max: 65535
 
 PTRnums: DW nums
 PTRpot: DW potencia
