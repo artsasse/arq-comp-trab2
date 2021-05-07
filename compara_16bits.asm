@@ -4,65 +4,110 @@
 ; Data: 29/04/2021
 ;---------------------------------------------------
 
+; A idéia geral do programa é ir verificando o sinal das variáveis.
+; Então se as duas forem positivas, faz uma subtração para saber
+; e vê se a primeira é maior, menor ou igual. O mesmo ocorre se forem
+; ambas negativas. Se tiverem sinais opostos, já retorna o resultado.
+; É retornado 0 no acumulador se as duas variáveis forem
+; iguais, se a primeira for maior, retorna 1 e se for menor retorna -1.
+; O valor retornado é apresentado no banner.
+
 ORG 200
 
-; Números a serem comparados
-X: DW 546
-Y: DW 49000
+; Números a serem comparados (Intervalo de -32768 a 32767)
+X: DW -32641
+Y: DW -32513
+
+; Ponteiro para armazenar o endereço dos números
+PTR: DW X
 
 ; Variáveis da rotina
 VAR1: DW 0
 VAR2: DW 0
 
-; Variável para armazenar o SP
-SP: DW 0
+; Ponteiro auxiliar
+PTR_AUX: DS 1
+
+; Variáveis para armazenar o SP
+ROTINA_RET1: DS 1
+ROTINA_RET2: DS 1
 
 ORG 0
 
 MAIN:
      ; Armazena a parte baixa do endereço de X na pilha
-     LDA X
+     LDA PTR
      PUSH
 
      ; Armazena a parte alta do endereço de X na pilha
-     LDA X+1
+     ADD #1
      PUSH
 
      ; Armazena a parte baixa do endereço de Y na pilha
-     LDA Y
+     ADD #1
      PUSH
 
      ; Armazena a parte alta do endereço de Y na pilha
-     LDA Y+1
+     ADD #1
      PUSH
 
      JSR ROTINA
 
+     ; Verifica se o acumulador retornou -1
+     JN  MENOS_UM
+
+     ; Para retorno de 0 ou 1, basta transformar em ASCII e printar
+     ADD #30h
+     OUT 2
+
      HLT
 
-ROTINA:
-       ; Salva o valor do SP
-       STS SP
+MENOS_UM:
+         ; Para retorno de -1, primeiro printamos o "-" e depois o 1
+         LDA #2Dh
+         OUT 2
+         LDA #31h
+         OUT 2
 
-       ; Tira as duas primeiras posições da pilha
+         HLT
+ROTINA:
+       ; Salva o valor de retorno da rotina
        POP
+       STA ROTINA_RET2
+
        POP
+       STA ROTINA_RET1
 
        ; Salva a parte alta de Y em VAR2
        POP
+       STA PTR_AUX
+       LDA @PTR_AUX
        STA VAR2+1
 
        ; Salva a parte baixa de Y em VAR2
        POP
+       STA PTR_AUX
+       LDA @PTR_AUX
        STA VAR2
 
        ; Salva a parte alta de X em VAR1
        POP
+       STA PTR_AUX
+       LDA @PTR_AUX
        STA VAR1+1
 
        ; Salva a parte baixa de X em VAR1
        POP
+       STA PTR_AUX
+       LDA @PTR_AUX
        STA VAR1
+
+       ; Coloca os endereços de retorno para serem utilizados no final
+       LDA ROTINA_RET1
+       PUSH
+
+       LDA ROTINA_RET2
+       PUSH
 
 TESTES:
        OUT 3 ; Limpa o banner
@@ -78,23 +123,22 @@ TESTES:
        AND #128  ; Se não der 0, VAR2 é negativo,
        JNZ MAIOR ; ou seja, VAR1 é maior
 
-       ; A partir daqui VAR1 e VAR2 são positivos
+SUBTRACAO:
+          LDA VAR1+1
+          SUB VAR2+1; Subtrai VAR2 de VAR1 para observar o resultado
+          JN  MENOR ; Se a subtração der negativo, VAR1 é menor
+          JP  MAIOR ; Se der positivo, VAR1 é maior
 
-       LDA VAR1+1
-       SUB VAR2+1; Subtrai VAR2 de VAR1 para observar o resultado
-       JN  MENOR ; Se a subtração der negativo, VAR1 é menor
-       JP  MAIOR ; Se der positivo, VAR1 é maior
+          ; Se der 0 temos que testar a parte baixa
 
-       ; Se der 0 temos que testar a parte baixa
+          LDA VAR1
+          SUB VAR2
+          JZ  IGUAIS; Se a subtração deu zero, as duas são iguais
+          JC  MENOR ; Se deu carry, VAR1 é menor
 
-       LDA VAR1
-       SUB VAR2
-       JN  MENOR ; Mesma lógica do código anterior
-       JP  MAIOR
+          ; Se passou nos testes acima, VAR1 é maior
 
-       ; Se passou nos testes acima, os dois são iguais
-
-       JMP IGUAIS
+          JMP MAIOR
 
 ; Caso onde VAR1 é negativo
 NEGATIVO:
@@ -102,41 +146,18 @@ NEGATIVO:
          AND #128  ; Se der 0, VAR2 é positivo,
          JZ  MENOR ; então VAR1 é menor
 
-         ; A partir daqui VAR1 e VAR2 são negativos
-
-         LDA VAR1+1
-         SUB VAR2+1
-         JN  MENOR
-         JP  MAIOR
-
-         LDA VAR1
-         SUB VAR2
-         JN  MENOR
-         JP  MAIOR
+         ; Volta para a parte de subtração
+         JMP SUBTRACAO
 IGUAIS:
+       ; Coloca resultado no acumulador
        LDA #0
-       ADD #30h ; Transforma em ASCII
-       OUT 2
-
-       ; Restaura o SP
-       LDS SP
        RET
 MAIOR:
+      ; Coloca resultado no acumulador
       LDA #1
-      ADD #30h
-      OUT 2
-      
-      ; Restaura o SP
-      LDS SP
       RET
 MENOR:
+      ; Coloca resultado no acumulador
       LDA #-1
-      LDA #2Dh
-      OUT 2
-      LDA #31h
-      OUT 2
-
-      ; Restaura o SP
-      LDS SP
       RET
 END 0
