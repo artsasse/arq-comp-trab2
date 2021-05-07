@@ -10,22 +10,19 @@ nums: DS 3
 count: DB 3
 
 ; Inicializando potencias de 10: 1, 10, 100, 1000 e 10000
-;potencia: DB 1, 0, 10, 0, 100, 0, 232, 3, 16, 39
 
 potencia: DB 1, 10, 100
-decimal: DB 0, 0
+decimal: DW 0
 
 PTRnums: DW nums
 PTRpot: DW potencia
 PTRdecimal: DW decimal
 
 PTRresultado: DS 2
-;PTRresultado2: DS 2
 
 multresult: DS 1
 multiplicando: DS 1
 multiplicador: DS 1
-multcounter: DS 1
 
 endereco_retorno: DS 2
 shiftcounter: DB 0
@@ -163,19 +160,14 @@ multiplica_por_7:
     ; Reseta multresult
     LDA #0
     STA multresult
-    ;STA multresult+1
 
     ; carrega 7 no multiplicador
     LDA #7
     STA multiplicador
-    ;LDA #0
-    ;STA multiplicador+1
 
     ; carrega a variavel no multiplicando
     LDA @PTRresultado
     STA multiplicando
-    ;LDA #0
-    ;STA multiplicando+1
 
     JSR multiplica
 
@@ -227,7 +219,6 @@ ler_decimal_salva_em_1byte:
 
     RET
 
-
 trata_nums:
     LDA #nums          ; Calcula endereço
     ADD count          ; do num a ser tratado
@@ -235,11 +226,8 @@ trata_nums:
 
     LDA @PTRpot        ; Configura o multiplicando
     STA multiplicando  ; da rotina 'multiplica' com
-    ;LDA PTRpot         ; a potencia de 10 (2bytes)
-    ;ADD #1             ;
-    ;STA PTRpot         ;
-    ;LDA @PTRpot        ;
-    ;STA multiplicando+1;
+                       ; a potencia de 10
+
 
     LDA PTRpot         ; Prepara o ponteiro de potências
     ADD #1             ; com a próxima potência a ser
@@ -247,22 +235,16 @@ trata_nums:
 
     LDA @PTRnums       ; Configura o multiplicador
     STA multiplicador  ; da rotina 'multiplica' com
-    ;LDA #0             ; o dígito a ser tratado
-    ;STA multiplicador+1;
+                       ; o dígito a ser tratado
 
     LDA #0             ; Reseta a variável
     STA multresult     ; multresult
-    ;STA multresult+1   ;
 
     JSR multiplica
 
     LDA @PTRresultado  ; Soma o byte menos
     ADD multresult     ; significatido do decimal
     STA @PTRresultado  ; com o menos significativo do multresult
-
-    ;LDA @PTRresultado2 ; Soma o byte mais significativo com o carry
-    ;ADC multresult+1
-    ;STA @PTRresultado2
 
     LDA count
     ADD #1
@@ -289,17 +271,15 @@ leitura:
     STA @PTRnums ;
 
     LDA count   ; Subtrai de count
-    SUB #1       ; e pula para a próxima etapa caso
+    SUB #1      ; e pula para a próxima etapa caso
     STA count   ;
     OR #0       ;
     JZ retorna  ; tenha lido 3 chars
 
     JMP leitura
 
-
 multiplica:
     LDA multiplicador    ; Se o multiplicador está zerado retorna
-    ;OR multiplicador+1   ;
     OR #0                ;
     JZ retorna           ;
 
@@ -307,18 +287,9 @@ multiplica:
     ADD multiplicando    ; Soma o byte menos significativo com o multiplicando
     STA multresult       ; Guarda o resultado
 
-    ;LDA multiplicando+1
-    ;ADC multresult+1     ; Pega o byte mais significativo
-    ;STA multresult+1     ; e soma o carry (1 caso a soma anterior dê overflow)
-
     LDA multiplicador     ; Subtrai 1 do multiplicador
     SUB #1                ;
     STA multiplicador     ;
-
-    ;LDA multiplicador+1   ; Pega o byte mais significativo do multiplicador
-    ;SBC #0                ; e subtrai o carry (1 caso a soma anterior dê overflow)
-    ;STA multiplicador+1   ;
-
 
     JMP multiplica
 
